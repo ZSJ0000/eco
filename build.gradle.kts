@@ -101,11 +101,8 @@ allprojects {
         // CraftEngine
         maven("https://repo.momirealms.net/releases/")
 
-        // ExcellentEconomy and ExcellentShop
+        // ExcellentEconomy, ExcellentShop, and NightCore
         maven("https://repo.nightexpressdev.com/releases")
-
-        // NightCore
-        maven("https://repo.su.nightexpress.com/releases")
 
         //Towny
         maven("https://repo.glaremasters.me/repository/towny/")
