@@ -104,6 +104,9 @@ allprojects {
         // ExcellentEconomy and ExcellentShop
         maven("https://repo.nightexpressdev.com/releases")
 
+        // NightCore
+        maven("https://repo.su.nightexpress.com/releases")
+
         //Towny
         maven("https://repo.glaremasters.me/repository/towny/")
 
