@@ -15,7 +15,6 @@ jobs:
       - name: Checkout Eco 2026.30 source
         uses: actions/checkout@v4
         with:
-          ref: 2026.30
           fetch-depth: 0
 
       - name: Set up JDK 25
@@ -28,7 +27,12 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Check repository version
+      - name: Make Gradle executable
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+
+      - name: Check current branch and commit
         shell: bash
         run: |
           set -e
@@ -39,33 +43,50 @@ jobs:
           echo "Current commit:"
           git rev-parse HEAD
 
-          echo "Configured version:"
-          grep -E '^[[:space:]]*version[[:space:]]*=' gradle.properties
+          echo "Expected official Eco 2026.30 tag commit:"
+          echo "01cc975a41874b60595402cc61cd85370f57c703"
 
-          if ! grep -Eq '^[[:space:]]*version[[:space:]]*=[[:space:]]*2026\.30[[:space:]]*$' gradle.properties; then
-            echo "ERROR: This is not Eco 2026.30."
+      - name: Check repository version
+        shell: bash
+        run: |
+          set -e
+
+          if [ ! -f "gradle.properties" ]; then
+            echo "ERROR: gradle.properties not found."
             exit 1
           fi
 
-          echo "Version check passed."
+          echo "Version configuration:"
+          grep -E '^[[:space:]]*version[[:space:]]*=' gradle.properties
 
-      - name: Check Java and Gradle
+          VERSION="$(grep -E '^[[:space:]]*version[[:space:]]*=' gradle.properties \
+            | head -n 1 \
+            | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]]+$//')"
+
+          if [ "$VERSION" != "2026.30" ]; then
+            echo "ERROR: Expected version 2026.30, found: $VERSION"
+            exit 1
+          fi
+
+          echo "Version check passed: $VERSION"
+
+      - name: Show Java and Gradle versions
         shell: bash
         run: |
           java -version
           ./gradlew --version
 
-      - name: Make Gradle executable
+      - name: Clean previous build
         shell: bash
         run: |
-          chmod +x ./gradlew
+          ./gradlew clean \
+            --no-daemon \
+            --stacktrace
 
       - name: Build Eco 2026.30
         shell: bash
         run: |
-          set -e
-
-          ./gradlew clean build \
+          ./gradlew build \
             --no-daemon \
             --stacktrace \
             --full-stacktrace
@@ -78,56 +99,100 @@ jobs:
           echo "Generated JAR files:"
           find . \
             -type f \
-            -path '*/build/libs/*.jar' \
+            -path "*/build/libs/*.jar" \
             -print \
             -exec ls -lh {} \;
 
-      - name: Check Eco plugin JAR
+      - name: Find Eco plugin JAR
+        id: find_eco_jar
         shell: bash
         run: |
           set -e
 
           JAR="$(find . \
             -type f \
-            -path '*/build/libs/*.jar' \
-            -name '*all.jar' \
+            -path "*/build/libs/*.jar" \
+            -name "*all.jar" \
+            | grep -v "/sources.jar$" \
+            | grep -v "/javadoc.jar$" \
             | head -n 1)"
 
           if [ -z "$JAR" ]; then
-            echo "ERROR: Eco JAR was not found."
+            echo "ERROR: Eco plugin JAR was not found."
             exit 1
           fi
 
-          echo "Selected JAR:"
+          echo "Eco JAR:"
           echo "$JAR"
 
-          echo "Testing JAR integrity:"
+          {
+            echo "jar<<EOF"
+            echo "$JAR"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate Eco JAR
+        shell: bash
+        run: |
+          set -e
+
+          JAR="${{ steps.find_eco_jar.outputs.jar }}"
+
+          echo "Validating:"
+          echo "$JAR"
+
           unzip -t "$JAR" >/dev/null
 
-          echo
-          echo "Checking plugin.yml:"
-          unzip -l "$JAR" | grep -E '(^|/)plugin.yml$'
+          if ! unzip -Z1 "$JAR" | grep -qE '(^|/)plugin\.yml$'; then
+            echo "ERROR: plugin.yml not found."
+            exit 1
+          fi
 
           echo
-          echo "plugin.yml content:"
+          echo "plugin.yml:"
           unzip -p "$JAR" plugin.yml
 
           echo
-          echo "Checking Eco version:"
-          if ! unzip -p "$JAR" plugin.yml | grep -q '^version: 2026.30$'; then
-            echo "ERROR: plugin.yml version is not 2026.30."
+          echo "Checking plugin name..."
+          if ! unzip -p "$JAR" plugin.yml | grep -q "^name: eco$"; then
+            echo "ERROR: plugin name is not eco."
             exit 1
           fi
 
           echo
-          echo "Checking Eco main class:"
-          if ! unzip -Z1 "$JAR" | grep -q '^com/willfp/eco/internal/spigot/EcoImpl.class$'; then
-            echo "ERROR: Eco main class was not found."
+          echo "Checking plugin version..."
+          if ! unzip -p "$JAR" plugin.yml | grep -q "^version: 2026.30$"; then
+            echo "ERROR: plugin version is not 2026.30."
             exit 1
           fi
 
           echo
-          echo "Eco plugin JAR validation passed."
+          echo "Checking main class..."
+          if ! unzip -Z1 "$JAR" \
+            | grep -q "^com/willfp/eco/internal/spigot/EcoImpl.class$"; then
+            echo "ERROR: Eco main class not found."
+            exit 1
+          fi
+
+          echo
+          echo "Checking Eco API classes..."
+
+          if unzip -Z1 "$JAR" \
+            | grep -q "^com/willfp/eco/core/Eco.class$"; then
+            echo "Found com/willfp/eco/core/Eco.class"
+          else
+            echo "WARNING: com/willfp/eco/core/Eco.class not included."
+          fi
+
+          if unzip -Z1 "$JAR" \
+            | grep -q "^com/willfp/eco/core/EcoPlugin.class$"; then
+            echo "Found com/willfp/eco/core/EcoPlugin.class"
+          else
+            echo "WARNING: com/willfp/eco/core/EcoPlugin.class not included."
+          fi
+
+          echo
+          echo "Eco JAR validation passed."
 
       - name: Upload Eco 2026.30 artifacts
         uses: actions/upload-artifact@v4
