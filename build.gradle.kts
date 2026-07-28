@@ -218,7 +218,7 @@ relocate("org.intellij", "com.willfp.eco.libs.intellij")
         relocate("com.willfp.modelenginebridge", "com.willfp.eco.libs.modelenginebridge")
         relocate("com.github.benmanes.caffeine", "com.willfp.eco.libs.caffeine")
 
-        }
+
 
         /*
         Not relocating adventure, because it's a pain in the ass, and it doesn't *seem* to be causing loader constraint violations.
