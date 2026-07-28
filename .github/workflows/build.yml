@@ -1,34 +1,139 @@
-name: Build
+name: Build Eco 2026.30
+
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - '**/*.kt'
-      - '**/*.kts'
-  push:
-    branches:
-      - master
-    paths:
-      - '**/*.kt'
-      - '**/*.kts'
   workflow_dispatch:
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: Build Eco 2026.30
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+
     steps:
-      - name: Checkout latest code
+      - name: Checkout Eco 2026.30 source
         uses: actions/checkout@v4
+        with:
+          ref: 2026.30
+          fetch-depth: 0
+
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '25'
-      - name: Setup Gradle
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: Build
-        run: ./gradlew build --full-stacktrace
+
+      - name: Check repository version
+        shell: bash
+        run: |
+          set -e
+
+          echo "Current branch:"
+          git branch --show-current
+
+          echo "Current commit:"
+          git rev-parse HEAD
+
+          echo "Configured version:"
+          grep -E '^[[:space:]]*version[[:space:]]*=' gradle.properties
+
+          if ! grep -Eq '^[[:space:]]*version[[:space:]]*=[[:space:]]*2026\.30[[:space:]]*$' gradle.properties; then
+            echo "ERROR: This is not Eco 2026.30."
+            exit 1
+          fi
+
+          echo "Version check passed."
+
+      - name: Check Java and Gradle
+        shell: bash
+        run: |
+          java -version
+          ./gradlew --version
+
+      - name: Make Gradle executable
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+
+      - name: Build Eco 2026.30
+        shell: bash
+        run: |
+          set -e
+
+          ./gradlew clean build \
+            --no-daemon \
+            --stacktrace \
+            --full-stacktrace
+
+      - name: List generated JAR files
+        shell: bash
+        run: |
+          set -e
+
+          echo "Generated JAR files:"
+          find . \
+            -type f \
+            -path '*/build/libs/*.jar' \
+            -print \
+            -exec ls -lh {} \;
+
+      - name: Check Eco plugin JAR
+        shell: bash
+        run: |
+          set -e
+
+          JAR="$(find . \
+            -type f \
+            -path '*/build/libs/*.jar' \
+            -name '*all.jar' \
+            | head -n 1)"
+
+          if [ -z "$JAR" ]; then
+            echo "ERROR: Eco JAR was not found."
+            exit 1
+          fi
+
+          echo "Selected JAR:"
+          echo "$JAR"
+
+          echo "Testing JAR integrity:"
+          unzip -t "$JAR" >/dev/null
+
+          echo
+          echo "Checking plugin.yml:"
+          unzip -l "$JAR" | grep -E '(^|/)plugin.yml$'
+
+          echo
+          echo "plugin.yml content:"
+          unzip -p "$JAR" plugin.yml
+
+          echo
+          echo "Checking Eco version:"
+          if ! unzip -p "$JAR" plugin.yml | grep -q '^version: 2026.30$'; then
+            echo "ERROR: plugin.yml version is not 2026.30."
+            exit 1
+          fi
+
+          echo
+          echo "Checking Eco main class:"
+          if ! unzip -Z1 "$JAR" | grep -q '^com/willfp/eco/internal/spigot/EcoImpl.class$'; then
+            echo "ERROR: Eco main class was not found."
+            exit 1
+          fi
+
+          echo
+          echo "Eco plugin JAR validation passed."
+
+      - name: Upload Eco 2026.30 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-2026.30-build-${{ github.run_number }}
+          path: |
+            **/build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 30
