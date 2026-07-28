@@ -457,7 +457,6 @@ abstract class EcoSpigotPlugin : EcoPlugin() {
     override fun loadIntegrationLoaders(): List<IntegrationLoader> {
         return listOf(
             // AntiGrief
-            IntegrationLoader("IridiumSkyblock") { AntigriefManager.register(AntigriefIridiumSkyblock()) },
             IntegrationLoader("DeluxeCombat") { AntigriefManager.register(AntigriefDeluxeCombat()) },
             IntegrationLoader("SuperiorSkyblock2") { AntigriefManager.register(AntigriefSuperiorSkyblock2()) },
             IntegrationLoader("BentoBox") { AntigriefManager.register(AntigriefBentoBox()) },
@@ -517,7 +516,6 @@ abstract class EcoSpigotPlugin : EcoPlugin() {
             IntegrationLoader("DeluxeSellwands") { ShopManager.register(ShopDeluxeSellwands()) },
             IntegrationLoader("EconomyShopGUI") { ShopManager.register(ShopEconomyShopGUI()) },
             IntegrationLoader("EconomyShopGUI-Premium") { ShopManager.register(ShopEconomyShopGUI()) },
-            IntegrationLoader("ExcellentShop") { ShopManager.register(ShopExcellentShop()) },
 
             // AFK
             IntegrationLoader("Essentials") { AFKManager.register(AFKIntegrationEssentials()) },
@@ -542,15 +540,6 @@ abstract class EcoSpigotPlugin : EcoPlugin() {
                 if (!MultiCurrencyHandler.getCurrencies().isNullOrEmpty()) {
                     for (currency in MultiCurrencyHandler.getCurrencies()) {
                         Prices.registerPriceFactory(PriceFactoryRoyaleEconomy(currency))
-                    }
-                }
-            },
-            IntegrationLoader("ExcellentEconomy") {
-                val rsp = Bukkit.getServer().servicesManager.getRegistration(ExcellentEconomyAPI::class.java)
-                if (rsp != null) {
-                    val api = rsp.provider
-                    for (currency in api.currencies) {
-                        Prices.registerPriceFactory(PriceFactoryCoinsEngine(api, currency))
                     }
                 }
             },
