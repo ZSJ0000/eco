@@ -139,3 +139,10 @@ tasks {
         }
     }
 }
+
+// Optional integrations whose upstream APIs are unavailable in the offline build.
+sourceSets.main {
+    java.exclude("**/integrations/antigrief/AntigriefIridiumSkyblock.kt")
+    java.exclude("**/integrations/shop/ShopExcellentShop.kt")
+    java.exclude("**/integrations/price/PriceFactoryCoinsEngine.kt")
+}
