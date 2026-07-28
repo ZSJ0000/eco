@@ -218,8 +218,6 @@ relocate("org.intellij", "com.willfp.eco.libs.intellij")
         relocate("com.willfp.modelenginebridge", "com.willfp.eco.libs.modelenginebridge")
         relocate("com.github.benmanes.caffeine", "com.willfp.eco.libs.caffeine")
 
-        relocate("kotlin", "com.willfp.eco.libs.kotlin") {
-            exclude("kotlin.kotlin_builtins")
         }
 
         /*
