@@ -165,7 +165,6 @@ import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefFactionsUU
 import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefGriefPrevention
 import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefHuskClaims
 import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefHuskTowns
-import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefIridiumSkyblock
 import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefKingdoms
 import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefLands
 import com.willfp.eco.internal.spigot.integrations.antigrief.AntigriefPvPManager
@@ -195,13 +194,11 @@ import com.willfp.eco.internal.spigot.integrations.entitylookup.EntityLookupMode
 import com.willfp.eco.internal.spigot.integrations.mcmmo.McmmoIntegrationImpl
 import com.willfp.eco.internal.spigot.integrations.multiverseinventories.MultiverseInventoriesIntegration
 import com.willfp.eco.internal.spigot.integrations.placeholder.PlaceholderIntegrationPAPI
-import com.willfp.eco.internal.spigot.integrations.price.PriceFactoryCoinsEngine
 import com.willfp.eco.internal.spigot.integrations.price.PriceFactoryPlayerPoints
 import com.willfp.eco.internal.spigot.integrations.price.PriceFactoryRoyaleEconomy
 import com.willfp.eco.internal.spigot.integrations.price.PriceFactoryUltraEconomy
 import com.willfp.eco.internal.spigot.integrations.shop.ShopDeluxeSellwands
 import com.willfp.eco.internal.spigot.integrations.shop.ShopEconomyShopGUI
-import com.willfp.eco.internal.spigot.integrations.shop.ShopExcellentShop
 import com.willfp.eco.internal.spigot.integrations.shop.ShopShopGuiPlus
 import com.willfp.eco.internal.spigot.integrations.shop.ShopZShop
 import com.willfp.eco.internal.spigot.metrics.PlayerflowHandler
